@@ -24,7 +24,7 @@ class Reactor(object):
 
         assert self.clients
         filenos = [client.id() for client in self.clients]
-        inputs = select.select(filenos, [], [])
+        inputs = select.select(filenos, [], [])[0]
         for input in inputs:
             client = filter(lambda client: client.id() == input, self.clients)[0]
             try:

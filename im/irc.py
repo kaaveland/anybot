@@ -23,6 +23,9 @@ class ParsedLine(object):
 
         return self.ircline.split()[1]
 
+    def __str__(self):
+
+        return self.ircline.encode('utf-8')
     
 class IRCProtocol(BufferedSockWriter):
 
@@ -51,6 +54,10 @@ class IRCProtocol(BufferedSockWriter):
 
         self.state = state
 
+    def add_handler(self):
+
+        self.handlers.append(handler)
+        
     def register(self):
 
         nick, user = self.state.nick(), self.state.user()
@@ -60,9 +67,12 @@ class IRCProtocol(BufferedSockWriter):
         
     def handle_line(self, line):
 
+        if 'PING' in line.upper():
+            self.wline('PONG :%s' % line.split(':')[1].strip())
+            return
         self.line = ParsedLine(line)
         self.log(str(self.line))
-        for handler in self.handler:
+        for handler in self.handlers:
             try:
                 if handler.interested(self.line, self.state):
                     handler.run(self.line, self.state, self)

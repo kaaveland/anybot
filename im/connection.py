@@ -22,7 +22,7 @@ class LineReciever(object):
 
     def do_io(self):
 
-        self.buf += self.sock.recv()
+        self.buf += self.sock.recv(2048)
         if CRLF in self.buf:
             for line in self.buf.split(CRLF):
                 self.handle_line(line)
@@ -49,8 +49,9 @@ def makelogger(name, format='%Y %m %d %H:%M'):
     logfile = open(name, 'a')
     def log(event):
         now = datetime.datetime.now().strftime(format)
-        for line in event.split('\n'):
-            logfile.write("%s | %s\n" % (now, event))
+        for line in str(event).split('\n'):
+            logfile.write("%s | %s\n" % (now, line.encode('utf-8')))
+    return log
 
 def nonlogger(name):
 
@@ -61,16 +62,12 @@ def nonlogger(name):
 class LoggingReciever(LineReciever):
 
     def __init__(self, destination, port, sockmaker=socket.socket, log=None):
-
+        
         if log is not None:
             self.log = log
         else:
-            self.log = makelogger(self.dst)
-        try:
-            LineReciever.__init__(self, destination, port, sockmaker)
-        except socket.error, err:
-            self.log(err)
-            raise
+            self.log = makelogger(destination)
+        LineReciever.__init__(self, destination, port, sockmaker)
         
     def do_io(self):
 
