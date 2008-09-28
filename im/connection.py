@@ -10,11 +10,12 @@ class LineReciever(object):
     def __init__(self, destination, port, sockmaker=socket.socket):
 
         self.sock = sockmaker()
+        self.sockmaker = sockmaker
         self.dst, self.port = destination, port
         self.buf = ""
         self.sock.connect((self.dst, self.port))
         self.term = CRLF
-        
+    
     def id(self):
 
         return self.sock.fileno()
@@ -50,7 +51,13 @@ def makelogger(name, format='%Y %m %d %H:%M'):
         now = datetime.datetime.now().strftime(format)
         for line in event.split('\n'):
             logfile.write("%s | %s\n" % (now, event))
-            
+
+def nonlogger(name):
+
+    def log(event):
+        pass
+    return log
+
 class LoggingReciever(LineReciever):
 
     def __init__(self, destination, port, sockmaker=socket.socket, log=None):
@@ -90,5 +97,4 @@ class BufferedSockWriter(LoggingReciever):
         if time.time() < self.last + self.interval:
             time.sleep(self.last + self.interval - time.time())
         self.sock.sendall(line.rstrip() + self.term)
-
-    
+        self.log('>>> %s' % line)
