@@ -51,7 +51,7 @@ class ParsedLine(object):
     def message(self):
         """Get the message part of a privmsg or notice or equivalent line."""
 
-        return self.params().split()[1:]
+        return ' '.join(self.params().split()[1:])[1:]
 
     def target(self):
         """Get the target of a command."""
@@ -62,7 +62,20 @@ class ParsedLine(object):
         else:
             raise ParseError('Getting target of command %s not yet supported.' % self.command())
 
-        
+    def debug_dump(self):
+        """Make a debug dump of all available information."""
+
+        info = {}
+        try:
+            info['target'] = self.target()
+        except ParseError:
+            pass
+        info['nick'] = self.nick()
+        info['command'] = self.command()
+        info['params'] = self.params()
+        info['message'] = self.message()
+        info['hostmask'] = self.hostmask()
+        return info
     
 class IRCProtocol(BufferedSockWriter):
     """Extend BufferedSockWriter to give a logging, buffered client
@@ -110,7 +123,8 @@ class IRCProtocol(BufferedSockWriter):
             message = message.encode('utf-8')
         while message:
             line, message = message[:400], message[400:]
-
+            self.wline('NOTICE %s :%s' % (target, line))
+    
     def set_handlers(self, handlers):
         """Set the line handlers on self to the list
         handlers."""
@@ -150,6 +164,8 @@ class IRCProtocol(BufferedSockWriter):
             else:
                 self.wline('PONG %s' % line[1])
             return
+        if not line.strip():
+            return
         self.line = ParsedLine(line)
         for handler in self.handlers:
             try:
@@ -185,11 +201,7 @@ class IRCProtocol(BufferedSockWriter):
         using notice."""
 
         assert self.line
-        target = self.line.target()
-        if target == self.state.nick():
-            self.notice(self.line.nick(), message)
-        else:
-            self.notice(target, message)
+        self.notice(self.line.nick(), message)
             
     def nick(self, new):
         """The IRC nick command."""
