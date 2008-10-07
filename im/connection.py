@@ -32,6 +32,7 @@ class LineReciever(object):
         self.dst, self.port = destination, port
         self.buf = ""
         self.term = CRLF
+        self.buf = None
         
     def id(self):
         """Return fd of socket."""
@@ -40,22 +41,17 @@ class LineReciever(object):
 
     def do_io(self):
         """Deal with input on socket."""
-        
-        self.buf += self.sock.recv(8192)
-        if CRLF in self.buf and self.buf.strip():
-            for line in self.buf.split(CRLF):
-                self.handle_line(line.decode('utf-8').rstrip())
-        elif LF in self.buf and self.buf.strip():
-            for line in self.buf.split(LF):
-                self.handle_line(line.decode('utf-8').rstrip())
-        if CRLF in self.buf or LF in self.buf:
-            self.buf = ""
+
+        if self.buf is None:
+            self.buf = self.sock.makefile('rb')
+        self.handle_line(self.buf.readline().rstrip())
 
     def register(self):
         """Register this client."""
         
         self.sock.connect((self.dst, self.port))
-    
+        self.buf = self.sock.makefile('rb')
+        
     def handle_line(self, line):
         """Override."""
         
