@@ -43,6 +43,26 @@ class ParsedLine(object):
 
         return self.ircline.encode('utf-8')
         
+    def params(self):
+        """Get the params part of the line."""
+
+        return ' '.join(self.ircline.split(' ')[2:])
+
+    def message(self):
+        """Get the message part of a privmsg or notice or equivalent line."""
+
+        return self.params().split()[1:]
+
+    def target(self):
+        """Get the target of a command."""
+
+        if self.command() in ('PRIVMSG', 'NOTICE', 'TOPIC',
+                              'JOIN', 'PART', 'KICK'):
+            return self.params().split()[0]
+        else:
+            raise ParseError('Getting target of command %s not yet supported.' % self.command())
+
+        
     
 class IRCProtocol(BufferedSockWriter):
     """Extend BufferedSockWriter to give a logging, buffered client
@@ -153,9 +173,24 @@ class IRCProtocol(BufferedSockWriter):
         last time."""
         
         assert self.line
-        target = self.line.reply_target()
-        self.privmsg(target, message)
-        
+        target = self.line.target()
+        if target == self.state.nick():
+            self.privmsg(self.line.nick(),
+                         message)
+        else:
+            self.privmsg(target, message)
+
+    def nreply(self, message):
+        """Send message to whoever asked something of this client the last time,
+        using notice."""
+
+        assert self.line
+        target = self.line.target()
+        if target == self.state.nick():
+            self.notice(self.line.nick(), message)
+        else:
+            self.notice(target, message)
+            
     def nick(self, new):
         """The IRC nick command."""
         
@@ -267,4 +302,3 @@ class IRCProtocol(BufferedSockWriter):
             self.wline('PING :%s' % self.dst)
         else:
             self.wline('PING :%s' % server)
-        

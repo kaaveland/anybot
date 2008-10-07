@@ -41,13 +41,13 @@ class LineReciever(object):
     def do_io(self):
         """Deal with input on socket."""
         
-        self.buf += self.sock.recv(2048)
-        if CRLF in self.buf:
+        self.buf += self.sock.recv(8192)
+        if CRLF in self.buf and self.buf.strip():
             for line in self.buf.split(CRLF):
-                self.handle_line(line.decode('utf-8'))
-        elif LF in self.buf:
+                self.handle_line(line.decode('utf-8').rstrip())
+        elif LF in self.buf and self.buf.strip():
             for line in self.buf.split(LF):
-                self.handle_line(line.decode('utf-8'))
+                self.handle_line(line.decode('utf-8').rstrip())
         if CRLF in self.buf or LF in self.buf:
             self.buf = ""
 
