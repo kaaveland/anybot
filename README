@@ -1,4 +1,6 @@
-To install this library, put it somewhere on your Python-path,
-or make sure the programs that use it has a copy of it.
+To install this library, put the folder somewhere on your python-path OR
+from the directory, run the command:
+# python setup.py install
 
-Setup.py scripts are coming.
+When it is on your python-path, you can use it by importing anybot.
+For the moment, the only really interesting part of it is the im subpackage.
