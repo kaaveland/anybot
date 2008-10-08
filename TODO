@@ -1,0 +1,12 @@
+In no particular order.
+- Write im/xmpp.py
+- Write im/multi_interface.py in such a way that it provides a simple
+   common interface for all the protocols in im/*
+- Fix im/selector.py so that the Reactor can optionally die only from
+   really critical exceptions, and will log the rest.
+- Make inheritance hierchary more shallow in.
+- Write a loader.py that clients who want to dynamically load and
+   reload modules can use.
+- Consider other similar protocols to xmpp and irc for inclusion.
+- Fully support RFC 1459.
+- Write a couple of generic state and handler classes for subclassing.
